@@ -3,7 +3,7 @@ library(caret)
 library(readr)
 
 # Load cleaned data
-data <- read_csv("data/processed/training_data.csv")
+data <- read_csv("data/training_data.csv")
 
 # Train logistic model
 train_logistic_model <- function(df) {
