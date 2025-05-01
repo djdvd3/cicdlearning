@@ -47,7 +47,7 @@ jobs:
       with:
         server_address: smtp.gmail.com
         server_port: 465
-        username: ${{ secrets.EMAIL_USERNAME }}
+        username: djdvd3@gmail.com
         password: ${{ secrets.EMAIL_PASSWORD }}
         subject: "Model Retraining Results"
         body: |
@@ -58,6 +58,6 @@ jobs:
           AUC-ROC: $(cat outputs/metrics/latest_metrics.yaml | grep auc_roc | awk '{print $2}')
           
           Full metrics available in the repository.
-        to: ${{ secrets.RECIPIENT_EMAIL }}
-        from: ${{ secrets.EMAIL_USERNAME }}
+        to: djdvd3@gmail.com
+        from: djdvd3@gmail.com
         content_type: text/plain
