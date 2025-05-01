@@ -1,0 +1,63 @@
+name: Model Retraining Pipeline
+
+on:
+  push:
+    paths:
+      - 'data/raw/**'  # Trigger when new raw data is added
+  schedule:
+    - cron: '0 8 * * *'  # Optional: Daily at 8 AM
+
+jobs:
+  retrain:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up R
+      uses: r-lib/actions/setup-r@v2
+      with:
+        r-version: '4.5.0'
+    
+    - name: Install dependencies
+      run: |
+        R -e "install.packages(c('caret', 'readr', 'dplyr', 'yaml', 'pROC'))"
+    
+    - name: Clean data
+      run: Rscript R/clean_data.R
+    
+    - name: Train model
+      run: Rscript R/train_model.R
+    
+    - name: Evaluate model
+      run: Rscript R/evaluate_model.R
+    
+    - name: Commit updates
+      run: |
+        git config --global user.name "GitHub Actions"
+        git config --global user.email "actions@github.com"
+        git add data/processed/ models/ outputs/
+        git commit -m "Auto-update: Retrained model [skip ci]" || echo "No changes to commit"
+        git push
+    
+    - name: Send email notification
+      uses: dawidd6/action-send-mail@v3
+      with:
+        server_address: smtp.gmail.com
+        server_port: 465
+        username: ${{ secrets.EMAIL_USERNAME }}
+        password: ${{ secrets.EMAIL_PASSWORD }}
+        subject: "Model Retraining Results"
+        body: |
+          New model training completed!
+          
+          Metrics:
+          F1 Score: $(cat outputs/metrics/latest_metrics.yaml | grep f1_score | awk '{print $2}')
+          AUC-ROC: $(cat outputs/metrics/latest_metrics.yaml | grep auc_roc | awk '{print $2}')
+          
+          Full metrics available in the repository.
+        to: ${{ secrets.RECIPIENT_EMAIL }}
+        from: ${{ secrets.EMAIL_USERNAME }}
+        content_type: text/plain
