@@ -3,7 +3,7 @@ name: Model Retraining Pipeline
 on:
   push:
     paths:
-      - 'data/raw/**'  # ONLY triggers when files in data/raw change
+      - 'data/raw/*'  # ONLY triggers when files in data/raw change
 
 jobs:
   retrain:
