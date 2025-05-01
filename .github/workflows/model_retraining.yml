@@ -3,15 +3,11 @@ name: Model Retraining Pipeline
 on:
   push:
     paths:
-      - 'data/raw/**'  # Trigger when new raw data is added
-  schedule:
-    - cron: '0 8 * * *'  # Optional: Daily at 8 AM
+      - 'data/raw/**'  # ONLY triggers when files in data/raw change
 
 jobs:
   retrain:
     runs-on: ubuntu-latest
-    env:
-      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
     
     steps:
     - uses: actions/checkout@v4
@@ -19,7 +15,7 @@ jobs:
     - name: Set up R
       uses: r-lib/actions/setup-r@v2
       with:
-        r-version: '4.5.0'
+        r-version: '4.3.2'
     
     - name: Install dependencies
       run: |
@@ -48,16 +44,15 @@ jobs:
         server_address: smtp.gmail.com
         server_port: 465
         username: djdvd3@gmail.com
-        password: ${{ secrets.EMAIL_PASSWORD }}
-        subject: "Model Retraining Results"
-        body: |
-          New model training completed!
-          
-          Metrics:
-          F1 Score: $(cat outputs/metrics/latest_metrics.yaml | grep f1_score | awk '{print $2}')
-          AUC-ROC: $(cat outputs/metrics/latest_metrics.yaml | grep auc_roc | awk '{print $2}')
-          
-          Full metrics available in the repository.
+        password: ${{ secrets.EMAIL_PASSWORD }}  # Your Gmail App Password
+        subject: "Model Retrained - New Data Detected"
         to: djdvd3@gmail.com
         from: djdvd3@gmail.com
+        body: |
+          New data triggered model retraining!
+          
+          Performance Metrics:
+          $(cat outputs/metrics/latest_metrics.yaml | grep -E 'f1_score|auc_roc')
+          
+          Details: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
         content_type: text/plain
